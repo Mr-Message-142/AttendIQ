@@ -1,0 +1,198 @@
+const attendanceData = {
+  msg: "200",
+  learnerid: 101578,
+
+  learner: {
+    total_present: 26,
+    course_code: "CB3203A",
+    total_conducted: 30,
+    course_name: "Artificial Intelligence",
+    instructor_name: "SURUCHI GAURAV DEDGAONKAR",
+    attendance: "86.67%",
+  },
+
+  crs_list: [
+    {
+      date: "07-Jul-2026",
+      sr_no: 1,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "09-Jul-2026",
+      sr_no: 2,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "10-Jul-2026",
+      sr_no: 3,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "14-Jul-2026",
+      sr_no: 4,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "15-Jul-2026",
+      sr_no: 5,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "16-Jul-2026",
+      sr_no: 6,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "21-Jul-2026",
+      sr_no: 7,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "22-Jul-2026",
+      sr_no: 8,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "23-Jul-2026",
+      sr_no: 9,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "29-Jul-2026",
+      sr_no: 10,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "30-Jul-2026",
+      sr_no: 11,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "31-Jul-2026",
+      sr_no: 12,
+      attendence: false,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "05-Aug-2026",
+      sr_no: 13,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "06-Aug-2026",
+      sr_no: 14,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "12-Aug-2026",
+      sr_no: 15,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "12-Aug-2026",
+      sr_no: 16,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "13-Aug-2026",
+      sr_no: 17,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "14-Aug-2026",
+      sr_no: 18,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "19-Aug-2026",
+      sr_no: 19,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "20-Aug-2026",
+      sr_no: 20,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "21-Aug-2026",
+      sr_no: 21,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "27-Aug-2026",
+      sr_no: 22,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "28-Aug-2026",
+      sr_no: 23,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "02-Sep-2026",
+      sr_no: 24,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "03-Sep-2026",
+      sr_no: 25,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "04-Sep-2026",
+      sr_no: 26,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "09-Sep-2026",
+      sr_no: 27,
+      attendence: true,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "11-Sep-2026",
+      sr_no: 28,
+      attendence: false,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "11-Sep-2026",
+      sr_no: 29,
+      attendence: false,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+    {
+      date: "16-Sep-2026",
+      sr_no: 30,
+      attendence: false,
+      faculty: "20344 : SURUCHI DEDGAONKAR",
+    },
+  ],
+};
+
+export default attendanceData;
