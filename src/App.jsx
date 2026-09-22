@@ -1,4 +1,9 @@
+import {
+  checkForAttendanceChange,
+} from "./services/attendanceMonitor";
+
 import { useEffect, useState } from "react";
+
 
 import Header from "./components/Header";
 import SubjectCard from "./components/SubjectCard";
@@ -17,6 +22,22 @@ import {
 } from "./utils/notification";
 
 function App() {
+
+function checkAttendanceNow() {
+  const result = checkForAttendanceChange(
+    attendanceData.crs_list
+  );
+
+  setLastChecked(new Date());
+
+  if (result.changed && result.newRecord?.attendence) {
+    sendAttendanceNotification(
+      attendanceData.learner.course_name,
+      result.newRecord
+    );
+  }
+}
+
   const [notificationEnabled, setNotificationEnabled] =
     useState(Notification.permission === "granted");
 
@@ -29,8 +50,16 @@ function App() {
   );
 
   useEffect(() => {
-    setLastChecked(new Date());
-  }, []);
+  checkAttendanceNow();
+
+  const interval = setInterval(() => {
+    checkAttendanceNow();
+  }, 120000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, []);
 
   async function enableNotifications() {
     const enabled =
@@ -60,6 +89,13 @@ function App() {
               Monitor your college attendance automatically.
             </p>
           </div>
+
+          <button
+  className="check-button"
+  onClick={checkAttendanceNow}
+>
+  Check Attendance Now
+</button>
 
           <div className="last-checked">
             <span>Last checked</span>
