@@ -4,6 +4,7 @@ import {
 
 import { useEffect, useState } from "react";
 
+import { fetchAttendance } from "./services/attendanceApi";
 
 import Header from "./components/Header";
 import SubjectCard from "./components/SubjectCard";
@@ -22,6 +23,22 @@ import {
 } from "./utils/notification";
 
 function App() {
+
+ useEffect(() => {
+  async function testLiveApi() {
+    try {
+      const data = await fetchAttendance();
+
+      console.log("LIVE ATTENDANCE RESPONSE:");
+      console.log(data);
+    } catch (error) {
+      console.error("LIVE API ERROR:");
+      console.error(error);
+    }
+  }
+
+  testLiveApi();
+}, []);
 
 function checkAttendanceNow() {
   const result = checkForAttendanceChange(
