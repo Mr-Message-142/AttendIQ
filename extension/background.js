@@ -1,6 +1,6 @@
 console.log("AttendIQ background service started.");
 
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message) => {
 
   if (message.type === "ATTENDIQ_PAGE_READY") {
 
@@ -8,13 +8,15 @@ chrome.runtime.onMessage.addListener((message, sender) => {
       "AttendIQ: Attendance page is ready:",
       message.url
     );
+  }
 
-    chrome.notifications.create({
-      type: "basic",
-      iconUrl: "icon.png",
-      title: "AttendIQ",
-      message: "Attendance monitoring is active."
-    });
+  if (message.type === "ATTENDIQ_ATTENDANCE_DATA") {
+
+    console.log(
+      "AttendIQ: Attendance data received:"
+    );
+
+    console.log(message.data);
   }
 
 });
