@@ -22,7 +22,17 @@
       "js": [
         "content.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "pageHook.js"
+      ],
+      "matches": [
+        "https://learner.vierp.in/*"
+      ]
     }
   ],
   "action": {
