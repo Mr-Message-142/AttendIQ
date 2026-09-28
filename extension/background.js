@@ -1,6 +1,8 @@
 console.log("AttendIQ background service started.");
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+  console.log("AttendIQ background received message:", message.type);
 
   if (message.type === "ATTENDIQ_PAGE_READY") {
 
@@ -20,11 +22,18 @@ chrome.runtime.onMessage.addListener((message) => {
       "AttendIQ: REAL ATTENDANCE DATA RECEIVED"
     );
 
-    console.log(message.data);
+    console.log(
+      "Course attendance list:"
+    );
+
+    console.table(message.data.crs_list);
 
     console.log(
       "========================================"
     );
   }
 
+  sendResponse({ success: true });
+
+  return true;
 });

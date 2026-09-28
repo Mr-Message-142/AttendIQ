@@ -27,10 +27,21 @@ window.addEventListener("message", (event) => {
       event.data.data
     );
 
-    chrome.runtime.sendMessage({
-      type: "ATTENDIQ_ATTENDANCE_DATA",
-      data: event.data.data
-    });
+    console.log("AttendIQ: Sending attendance data to background.");
+
+chrome.runtime.sendMessage({
+  type: "ATTENDIQ_ATTENDANCE_DATA",
+  data: event.data.data
+})
+.then(() => {
+  console.log("AttendIQ: Background message sent successfully.");
+})
+.catch((error) => {
+  console.error(
+    "AttendIQ: Background message failed:",
+    error
+  );
+});
   }
 
 });
