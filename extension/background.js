@@ -1,4 +1,3 @@
-
 console.log("AttendIQ background service started.");
 
 
@@ -79,7 +78,7 @@ async function processAttendance(data) {
 
 
   // ===================================================
-  // GET PREVIOUSLY STORED STATE
+  // GET STORED ATTENDANCE STATE
   // ===================================================
 
   const stored =
@@ -140,10 +139,12 @@ async function processAttendance(data) {
 
 
   // ===================================================
-  // CHECK FOR CHANGES
+  // CHECK ATTENDANCE CHANGES
   // ===================================================
 
   let attendanceChanged = false;
+
+  let changedLecture = null;
 
 
   for (const lecture of attendanceList) {
@@ -176,15 +177,16 @@ async function processAttendance(data) {
         currentStatus;
 
 
-      // If newly discovered lecture is already present
       if (currentStatus === true) {
-
-        attendanceChanged = true;
-
 
         console.log(
           "AttendIQ: New lecture is PRESENT."
         );
+
+
+        attendanceChanged = true;
+
+        changedLecture = lecture;
 
       }
 
@@ -224,17 +226,24 @@ async function processAttendance(data) {
 
 
       attendanceChanged = true;
+
+      changedLecture = lecture;
+
     }
 
 
-    // Save current state
+    // =================================================
+    // UPDATE STORED STATE
+    // =================================================
+
     lectureStates[id] =
       currentStatus;
+
   }
 
 
   // ===================================================
-  // SAVE UPDATED STATES
+  // SAVE UPDATED ATTENDANCE STATE
   // ===================================================
 
   await chrome.storage.local.set({
@@ -245,13 +254,59 @@ async function processAttendance(data) {
 
 
   // ===================================================
-  // ATTENDANCE CHANGE RESULT
+  // SEND NOTIFICATION
   // ===================================================
 
-  if (attendanceChanged) {
+  if (attendanceChanged && changedLecture) {
 
     console.log(
       "AttendIQ: Attendance change detected."
+    );
+
+
+    console.log(
+      "AttendIQ: Sending browser notification."
+    );
+
+
+    const courseName =
+      data.learner?.course_name ||
+      "Lecture";
+
+
+    const faculty =
+      changedLecture.faculty ||
+      data.learner?.instructor_name ||
+      "Faculty";
+
+
+    const date =
+      changedLecture.date ||
+      "Today";
+
+
+    chrome.notifications.create(
+      `attendance-${lectureId}`,
+      {
+        type: "basic",
+
+        iconUrl: "icon128.png",
+
+        title:
+          "🔔 AttendIQ - Attendance Marked",
+
+        message:
+          `${courseName}\nYou are marked PRESENT.\nFaculty: ${faculty}\nDate: ${date}`,
+
+        priority: 2,
+
+        requireInteraction: true
+      }
+    );
+
+
+    console.log(
+      "AttendIQ: Browser notification sent."
     );
 
   } else {
@@ -279,7 +334,7 @@ chrome.runtime.onMessage.addListener(
 
 
     // =================================================
-    // ATTENDANCE PAGE READY
+    // PAGE READY
     // =================================================
 
     if (
@@ -296,7 +351,7 @@ chrome.runtime.onMessage.addListener(
 
 
     // =================================================
-    // ATTENDANCE DATA RECEIVED
+    // ATTENDANCE DATA
     // =================================================
 
     if (
@@ -337,7 +392,7 @@ chrome.runtime.onMessage.addListener(
 
 
     // =================================================
-    // SEND RESPONSE
+    // RESPONSE
     // =================================================
 
     sendResponse({
@@ -351,3 +406,4 @@ chrome.runtime.onMessage.addListener(
 
   }
 );
+
