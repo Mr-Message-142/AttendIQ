@@ -2,12 +2,24 @@ console.log("AttendIQ content script started.");
 
 
 // =====================================================
-// LOAD PAGE HOOK
+// ATTENDIQ SETTINGS
 // =====================================================
 
-const script = document.createElement("script");
+// Check attendance every 5 minutes
+const CHECK_INTERVAL =
+  5 * 60 * 1000;
 
-script.src = chrome.runtime.getURL("pageHook.js");
+
+// =====================================================
+// INJECT PAGE HOOK
+// =====================================================
+
+const script =
+  document.createElement("script");
+
+script.src =
+  chrome.runtime.getURL("pageHook.js");
+
 
 script.onload = () => {
 
@@ -30,7 +42,10 @@ script.onerror = (error) => {
 };
 
 
-(document.head || document.documentElement).appendChild(script);
+(
+  document.head ||
+  document.documentElement
+).appendChild(script);
 
 
 // =====================================================
@@ -41,18 +56,18 @@ window.addEventListener(
   "message",
   async (event) => {
 
-    // -------------------------------------------------
-    // Ignore messages from other windows
-    // -------------------------------------------------
+    // -----------------------------------------------
+    // SECURITY CHECK
+    // -----------------------------------------------
 
-    if (event.source !== window) {
+    if (
+      event.source !== window
+    ) {
+
       return;
+
     }
 
-
-    // -------------------------------------------------
-    // Ignore unrelated messages
-    // -------------------------------------------------
 
     if (
       event.data?.source !==
@@ -64,9 +79,9 @@ window.addEventListener(
     }
 
 
-    // =================================================
+    // -----------------------------------------------
     // ATTENDANCE RESPONSE
-    // =================================================
+    // -----------------------------------------------
 
     if (
       event.data?.type ===
@@ -79,11 +94,13 @@ window.addEventListener(
       );
 
 
-      // ------------------------------------------------
-      // Check extension context
-      // ------------------------------------------------
+      // ---------------------------------------------
+      // CHECK EXTENSION CONTEXT
+      // ---------------------------------------------
 
-      if (!chrome.runtime?.id) {
+      if (
+        !chrome.runtime?.id
+      ) {
 
         console.error(
           "AttendIQ: Extension context is unavailable."
@@ -99,9 +116,9 @@ window.addEventListener(
       );
 
 
-      // ------------------------------------------------
-      // Send attendance data to background
-      // ------------------------------------------------
+      // ---------------------------------------------
+      // SEND TO BACKGROUND
+      // ---------------------------------------------
 
       try {
 
@@ -122,8 +139,9 @@ window.addEventListener(
           response
         );
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(
           "AttendIQ: Background message failed:",
@@ -163,8 +181,9 @@ window.addEventListener(
       response
     );
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "AttendIQ: PAGE_READY message failed:",
@@ -174,3 +193,71 @@ window.addEventListener(
   }
 
 })();
+
+
+// =====================================================
+// AUTOMATIC ATTENDANCE CHECK
+// =====================================================
+
+console.log(
+  "AttendIQ: Automatic attendance checking enabled."
+);
+
+
+console.log(
+  "AttendIQ: Next attendance check in 5 minutes."
+);
+
+
+// =====================================================
+// PERIODIC PAGE REFRESH
+// =====================================================
+
+setInterval(() => {
+
+  // -------------------------------------------------
+  // Make sure we are still on attendance page
+  // -------------------------------------------------
+
+  if (
+    !window.location.href.includes(
+      "/attendance"
+    )
+  ) {
+
+    console.log(
+      "AttendIQ: Not on attendance page. Skipping automatic check."
+    );
+
+    return;
+
+  }
+
+
+  console.log(
+    "========================================"
+  );
+
+
+  console.log(
+    "AttendIQ: Starting automatic attendance check..."
+  );
+
+
+  console.log(
+    "AttendIQ: Refreshing EduPlusCampus attendance page."
+  );
+
+
+  console.log(
+    "========================================"
+  );
+
+
+  // -------------------------------------------------
+  // Reload the existing authenticated page
+  // -------------------------------------------------
+
+  window.location.reload();
+
+}, CHECK_INTERVAL);

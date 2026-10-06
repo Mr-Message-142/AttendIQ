@@ -2,12 +2,22 @@ console.log("AttendIQ background service started.");
 
 
 // =====================================================
-// ATTENDANCE MONITOR
+// ATTENDIQ SETTINGS
+// =====================================================
+
+const STORAGE_KEY = "attendIQCourseStates";
+
+
+// =====================================================
+// PROCESS ATTENDANCE DATA
 // =====================================================
 
 async function processAttendance(data) {
 
-  if (!data || !Array.isArray(data.crs_list)) {
+  if (
+    !data ||
+    !Array.isArray(data.crs_list)
+  ) {
 
     console.warn(
       "AttendIQ: Invalid attendance data."
@@ -17,192 +27,214 @@ async function processAttendance(data) {
   }
 
 
-  const attendanceList = data.crs_list;
-
-
   console.log(
     "AttendIQ: Processing",
-    attendanceList.length,
-    "attendance records."
+    data.crs_list.length,
+    "courses."
   );
 
 
   // ===================================================
-  // FIND LATEST LECTURE
-  // ===================================================
-
-  const latestLecture = attendanceList.reduce(
-    (latest, current) => {
-
-      if (!latest) {
-        return current;
-      }
-
-      return Number(current.sr_no) > Number(latest.sr_no)
-        ? current
-        : latest;
-
-    },
-    null
-  );
-
-
-  if (!latestLecture) {
-
-    console.warn(
-      "AttendIQ: No lecture found."
-    );
-
-    return;
-  }
-
-
-  console.log(
-    "AttendIQ: Latest lecture:",
-    latestLecture
-  );
-
-
-  // ===================================================
-  // CREATE UNIQUE LECTURE ID
-  // ===================================================
-
-  const lectureId =
-    `${latestLecture.date}_${latestLecture.sr_no}_${latestLecture.faculty}`;
-
-
-  console.log(
-    "AttendIQ: Lecture ID:",
-    lectureId
-  );
-
-
-  // ===================================================
-  // GET STORED ATTENDANCE STATE
+  // GET STORED COURSE STATES
   // ===================================================
 
   const stored =
     await chrome.storage.local.get([
-      "attendIQInitialized",
-      "lectureStates"
+      STORAGE_KEY
     ]);
 
 
-  const lectureStates =
-    stored.lectureStates || {};
+  const previousStates =
+    stored[STORAGE_KEY] || {};
+
+
+  const currentStates = {};
+
+
+  let attendanceMarked = false;
 
 
   // ===================================================
-  // FIRST RUN
+  // PROCESS EVERY COURSE
   // ===================================================
 
-  if (!stored.attendIQInitialized) {
+  for (const course of data.crs_list) {
 
-    console.log(
-      "AttendIQ: First attendance data received."
-    );
+    // -------------------------------------------------
+    // COURSE INFORMATION
+    // -------------------------------------------------
 
+    const courseCode =
+      course.course_code;
 
-    console.log(
-      "AttendIQ: Creating initial attendance baseline."
-    );
+    const courseName =
+      course.course_name || "Unknown Course";
 
-
-    attendanceList.forEach((lecture) => {
-
-      const id =
-        `${lecture.date}_${lecture.sr_no}_${lecture.faculty}`;
-
-
-      lectureStates[id] =
-        Boolean(lecture.attendence);
-
-    });
+    const loadType =
+      course.load_type ||
+      course.loadtypeid ||
+      "default";
 
 
-    await chrome.storage.local.set({
+    // -------------------------------------------------
+    // VALIDATE COURSE
+    // -------------------------------------------------
 
-      attendIQInitialized: true,
+    if (!courseCode) {
 
-      lectureStates: lectureStates
-
-    });
-
-
-    console.log(
-      "AttendIQ: Initial attendance baseline saved."
-    );
-
-
-    return;
-  }
-
-
-  // ===================================================
-  // CHECK ATTENDANCE CHANGES
-  // ===================================================
-
-  let attendanceChanged = false;
-
-  let changedLecture = null;
-
-
-  for (const lecture of attendanceList) {
-
-    const id =
-      `${lecture.date}_${lecture.sr_no}_${lecture.faculty}`;
-
-
-    const currentStatus =
-      Boolean(lecture.attendence);
-
-
-    const previousStatus =
-      lectureStates[id];
-
-
-    // =================================================
-    // NEW LECTURE
-    // =================================================
-
-    if (previousStatus === undefined) {
-
-      console.log(
-        "AttendIQ: New lecture detected:",
-        lecture
+      console.warn(
+        "AttendIQ: Course has no course_code:",
+        course
       );
 
-
-      lectureStates[id] =
-        currentStatus;
-
-
-      if (currentStatus === true) {
-
-        console.log(
-          "AttendIQ: New lecture is PRESENT."
-        );
+      continue;
+    }
 
 
-        attendanceChanged = true;
+    // -------------------------------------------------
+    // CREATE UNIQUE COURSE KEY
+    // -------------------------------------------------
 
-        changedLecture = lecture;
+    const courseKey =
+      `${courseCode}_${loadType}`;
 
-      }
 
+    // -------------------------------------------------
+    // CURRENT ATTENDANCE
+    // -------------------------------------------------
+
+    const currentPresent =
+      parsePresent(course.present);
+
+
+    const currentConducted =
+      Number(course.total_conducted);
+
+
+    console.log(
+      "----------------------------------------"
+    );
+
+
+    console.log(
+      "AttendIQ: Checking course:",
+      courseName
+    );
+
+
+    console.log(
+      "AttendIQ: Course code:",
+      courseCode
+    );
+
+
+    console.log(
+      "AttendIQ: Load type:",
+      loadType
+    );
+
+
+    console.log(
+      "AttendIQ: Current present:",
+      currentPresent
+    );
+
+
+    console.log(
+      "AttendIQ: Current conducted:",
+      currentConducted
+    );
+
+
+    // =================================================
+    // CREATE CURRENT STATE
+    // =================================================
+
+    currentStates[courseKey] = {
+
+      courseCode:
+        courseCode,
+
+      courseName:
+        courseName,
+
+      loadType:
+        loadType,
+
+      instructor:
+        course.instructor_name || "",
+
+      present:
+        currentPresent,
+
+      conducted:
+        currentConducted,
+
+      attendance:
+        course.attendance || "",
+
+      updatedAt:
+        Date.now()
+
+    };
+
+
+    // =================================================
+    // GET PREVIOUS COURSE STATE
+    // =================================================
+
+    const previous =
+      previousStates[courseKey];
+
+
+    // =================================================
+    // FIRST TIME COURSE
+    // =================================================
+
+    if (!previous) {
+
+      console.log(
+        "AttendIQ: First time seeing course:",
+        courseKey
+      );
+
+      console.log(
+        "AttendIQ: Creating baseline."
+      );
 
       continue;
     }
 
 
     // =================================================
-    // FALSE → TRUE
+    // PREVIOUS STATE
+    // =================================================
+
+    console.log(
+      "AttendIQ: Previous present:",
+      previous.present
+    );
+
+
+    console.log(
+      "AttendIQ: Previous conducted:",
+      previous.conducted
+    );
+
+
+    // =================================================
+    // ATTENDANCE INCREASED
     // =================================================
 
     if (
-      previousStatus === false &&
-      currentStatus === true
+      currentPresent >
+      previous.present
     ) {
+
+      const difference =
+        currentPresent -
+        previous.present;
+
 
       console.log(
         "========================================"
@@ -215,8 +247,38 @@ async function processAttendance(data) {
 
 
       console.log(
-        "Lecture:",
-        lecture
+        "Course:",
+        courseName
+      );
+
+
+      console.log(
+        "Course Code:",
+        courseCode
+      );
+
+
+      console.log(
+        "Load Type:",
+        loadType
+      );
+
+
+      console.log(
+        "Previous present:",
+        previous.present
+      );
+
+
+      console.log(
+        "Current present:",
+        currentPresent
+      );
+
+
+      console.log(
+        "Attendance increase:",
+        difference
       );
 
 
@@ -225,82 +287,214 @@ async function processAttendance(data) {
       );
 
 
-      attendanceChanged = true;
+      attendanceMarked = true;
 
-      changedLecture = lecture;
+
+      // =================================================
+      // SEND NOTIFICATION
+      // =================================================
+
+      await sendAttendanceNotification({
+
+        courseName:
+          courseName,
+
+        courseCode:
+          courseCode,
+
+        loadType:
+          loadType,
+
+        previousPresent:
+          previous.present,
+
+        currentPresent:
+          currentPresent,
+
+        difference:
+          difference,
+
+        attendance:
+          course.attendance || ""
+
+      });
 
     }
 
 
     // =================================================
-    // UPDATE STORED STATE
+    // NO INCREASE
     // =================================================
 
-    lectureStates[id] =
-      currentStatus;
+    else {
+
+      console.log(
+        "AttendIQ: No attendance increase for:",
+        courseName
+      );
+
+    }
 
   }
 
 
   // ===================================================
-  // SAVE UPDATED ATTENDANCE STATE
+  // SAVE CURRENT STATE
   // ===================================================
 
   await chrome.storage.local.set({
 
-    lectureStates: lectureStates
+    [STORAGE_KEY]:
+      currentStates
 
   });
 
 
+  console.log(
+    "AttendIQ: Course attendance state saved."
+  );
+
+
   // ===================================================
-  // SEND NOTIFICATION
+  // FINAL RESULT
   // ===================================================
 
-  if (attendanceChanged && changedLecture) {
+  if (attendanceMarked) {
 
     console.log(
-      "AttendIQ: Attendance change detected."
+      "AttendIQ: Attendance notification process completed."
+    );
+
+  }
+  else {
+
+    console.log(
+      "AttendIQ: No new attendance notification."
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// PARSE PRESENT VALUE
+// =====================================================
+
+function parsePresent(value) {
+
+  // ---------------------------------------------------
+  // NUMBER
+  // ---------------------------------------------------
+
+  if (
+    typeof value === "number"
+  ) {
+
+    return value;
+
+  }
+
+
+  // ---------------------------------------------------
+  // STRING
+  // ---------------------------------------------------
+
+  if (
+    typeof value !== "string"
+  ) {
+
+    return 0;
+
+  }
+
+
+  // Example:
+  // "21 / 26"
+
+  const parts =
+    value.split("/");
+
+
+  if (
+    parts.length >= 1
+  ) {
+
+    const number =
+      Number(
+        parts[0].trim()
+      );
+
+
+    if (
+      !Number.isNaN(number)
+    ) {
+
+      return number;
+
+    }
+
+  }
+
+
+  return 0;
+
+}
+
+
+// =====================================================
+// SEND BROWSER NOTIFICATION
+// =====================================================
+
+async function sendAttendanceNotification(info) {
+
+  const notificationId =
+    `attendiq-${info.courseCode}-${info.loadType}-${Date.now()}`;
+
+
+  try {
+
+    // -------------------------------------------------
+    // GET EXTENSION ICON
+    // -------------------------------------------------
+
+    const iconUrl =
+      chrome.runtime.getURL(
+        "icons/icon128.png"
+      );
+
+
+    console.log(
+      "AttendIQ: Notification icon:",
+      iconUrl
     );
 
 
-    console.log(
-      "AttendIQ: Sending browser notification."
-    );
+    // -------------------------------------------------
+    // CREATE NOTIFICATION
+    // -------------------------------------------------
 
-
-    const courseName =
-      data.learner?.course_name ||
-      "Lecture";
-
-
-    const faculty =
-      changedLecture.faculty ||
-      data.learner?.instructor_name ||
-      "Faculty";
-
-
-    const date =
-      changedLecture.date ||
-      "Today";
-
-
-    chrome.notifications.create(
-      `attendance-${lectureId}`,
+    await chrome.notifications.create(
+      notificationId,
       {
-        type: "basic",
 
-        iconUrl: "icon128.png",
+        type:
+          "basic",
+
+        iconUrl:
+          iconUrl,
 
         title:
-          "🔔 AttendIQ - Attendance Marked",
+          "🔔 AttendIQ — Attendance Marked",
 
         message:
-          `${courseName}\nYou are marked PRESENT.\nFaculty: ${faculty}\nDate: ${date}`,
+          `${info.courseName}\n` +
+          `Present: ${info.currentPresent}\n` +
+          `Attendance: ${info.attendance}`,
 
-        priority: 2,
+        priority:
+          2
 
-        requireInteraction: true
       }
     );
 
@@ -309,10 +503,13 @@ async function processAttendance(data) {
       "AttendIQ: Browser notification sent."
     );
 
-  } else {
+  }
 
-    console.log(
-      "AttendIQ: No attendance change."
+  catch (error) {
+
+    console.error(
+      "AttendIQ: Notification failed:",
+      error
     );
 
   }
@@ -328,7 +525,7 @@ chrome.runtime.onMessage.addListener(
   (message, sender, sendResponse) => {
 
     console.log(
-      "AttendIQ background received message:",
+      "AttendIQ background received:",
       message.type
     );
 
@@ -366,7 +563,9 @@ chrome.runtime.onMessage.addListener(
 
       if (
         message.data &&
-        Array.isArray(message.data.crs_list)
+        Array.isArray(
+          message.data.crs_list
+        )
       ) {
 
         console.table(
@@ -379,14 +578,16 @@ chrome.runtime.onMessage.addListener(
       processAttendance(
         message.data
       )
-      .catch((error) => {
+      .catch(
+        (error) => {
 
-        console.error(
-          "AttendIQ: Attendance processing failed:",
-          error
-        );
+          console.error(
+            "AttendIQ: Attendance processing failed:",
+            error
+          );
 
-      });
+        }
+      );
 
     }
 
@@ -397,7 +598,8 @@ chrome.runtime.onMessage.addListener(
 
     sendResponse({
 
-      success: true
+      success:
+        true
 
     });
 
@@ -406,4 +608,3 @@ chrome.runtime.onMessage.addListener(
 
   }
 );
-
