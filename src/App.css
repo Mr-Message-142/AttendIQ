@@ -332,3 +332,38 @@ th {
     width: 92%;
   }
 }
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.connection-dot {
+  width: 9px;
+  height: 9px;
+  display: inline-block;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.connection-status.connected .connection-dot {
+  background: #16a34a;
+}
+
+.connection-status.connecting .connection-dot {
+  background: #f59e0b;
+}
+
+.connection-status.waiting .connection-dot {
+  background: #dc2626;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 8px;
+}

@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "https://learner.vierp.in/*",
-    "https://learnerapi.vierp.in/*"
+    "https://learnerapi.vierp.in/*",
+    "http://localhost:5173/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,7 +23,16 @@
       "js": [
         "content.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost:5173/*"
+      ],
+      "js": [
+        "dashboardBridge.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
